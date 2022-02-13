@@ -31,6 +31,7 @@
   5. `pm2 start --name cweb bin/jscLoader.js --max-memory-restart 600M`
 
 - 源码使用步骤
+  1. 修改config目录下的system.js.example文件名为system.js,按照注释填写相关内容
   1. `npm i`
   2. `npm run gen:table:force`
   3. 修改部分代码阻止授权验证和文件hash校验
