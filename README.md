@@ -1,4 +1,4 @@
-#Crust 自动领取奖励工具
+# Crust 自动领取奖励工具
 ### 已实现功能
 - 自动领取奖励，并发送邮件提醒
 - 批量创建账户，目前没有什么用
@@ -17,11 +17,11 @@
 - 解除绑定的Cru
 - 解锁Cru18/Cru24
 
-##Environmental requirements
+## Environmental requirements
 - Source code >= v16.13.2
 - Release package by bytecode == v16.3.2
 
-##Installation steps
+## Installation steps
 
 - 发布的程序包使用步骤
   1. 修改config目录下的system.js.example文件名为system.js,按照注释填写相关内容 
@@ -36,7 +36,7 @@
   3. 修改部分代码阻止授权验证和文件hash校验
   4. `npm start`
 
-##FAQ
+## FAQ
 
 - 请安装Nodejs和npm后先执行 `npm i -g pm2`;一般官方提供的安装包自带NPM工具
 - 自动领取奖励需要去主网创建一个账户，复制助记词填入配置文件，并转入少量CRU用来作为领取奖励时的交易费用，本工具不会扣出该账户的任何余额，提醒：该账户不需要太多CRU
