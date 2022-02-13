@@ -17,11 +17,11 @@
 - 解除绑定的Cru
 - 解锁Cru18/Cru24
 
-## Environmental requirements
+## 要求环境
 - Source code >= v16.13.2
 - Release package by bytecode == v16.3.2
 
-## Installation steps
+## 安装步骤
 
 - 发布的程序包使用步骤
   1. 修改config目录下的system.js.example文件名为system.js,按照注释填写相关内容 
