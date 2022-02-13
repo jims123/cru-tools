@@ -53,3 +53,7 @@
 - 默认使用sqlite数据库，也可使用mysql，需要修改两处代码:
   - `common/global_defines.js` 取消注释 122-132行
   - `common/global_defines.js` 注释115-119行
+
+
+### 捐赠地址
+- CRU: [cTKurCWYeQk96rTapB1kVyGuVfPSAAGHVWEFGQEmQpmKTb9iN](cTKurCWYeQk96rTapB1kVyGuVfPSAAGHVWEFGQEmQpmKTb9iN)
