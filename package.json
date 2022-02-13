@@ -1,0 +1,75 @@
+{
+  "name": "cru-tool",
+  "version": "0.0.2",
+  "private": true,
+  "scripts": {
+    "start": "node bin/www.js",
+    "pm2start": "pm2 start --name web bin/www.js --max-memory-restart 500M",
+    "pm2startjsc": "pm2 start --name jweb bin/jscLoader.js --max-memory-restart 500M",
+    "gen:table": "node tools/generateTable.js",
+    "gen:table:force": "node tools/generateTable.js --force",
+    "obfuscate": "javascript-obfuscator ./ --output ../obf-cru_tool --target node --config obf.js",
+    "bytenode": "node tools/compileJSC.js ../obf-cru_tool ../jsc-cru_tool",
+    "bytenode_test": "node tools/compileJSC.js ./ ../jsc-cru_tool",
+    "gen:checksum": "node tools/genFilesHash.js D:\\WebstormProjects\\jsc-cru_tool",
+    "gen:lic": "node tools/genLicense.js 1 720 test D:\\WebstormProjects\\jsc-cru_tool",
+    "copy:files": "node tools/copyStaticFiles.js D:\\WebstormProjects\\cru_tool D:\\WebstormProjects\\obf-cru_tool",
+    "nodec": "nodec bin/bc_start.js --skip-npm-install",
+    "build": "npm run obfuscate && npm run copy:files && npm run bytenode && npm run gen:checksum && npm run gen:lic"
+  },
+  "dependencies": {
+    "@crustio/type-definitions": "^1.2.0",
+    "@polkadot/api": "^7.4.1",
+    "@polkadot/keyring": "^8.3.2",
+    "@polkadot/util-crypto": "^8.3.2",
+    "bluebird": "^3.7.2",
+    "bn.js": "^5.2.0",
+    "bootstrap": "^3.4.1",
+    "connect-sqlite3": "^0.9.13",
+    "connect-timeout": "^1.9.0",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "ejs": "~2.6.1",
+    "express": "~4.16.1",
+    "express-session": "^1.17.2",
+    "http-errors": "~1.6.3",
+    "humanize-plus": "^1.8.2",
+    "jquery": "^1.12.4",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.1",
+    "morgan": "~1.9.1",
+    "mysql2": "^2.3.3",
+    "nodemailer": "^6.7.2",
+    "redis": "^4.0.2",
+    "request": "^2.88.2",
+    "schema-inspector": "^2.0.1",
+    "sequelize": "^6.13.0",
+    "serve-favicon": "^2.5.0",
+    "sqlite3": "^5.0.2"
+  },
+  "devDependencies": {
+    "bytenode": "^1.3.4",
+    "javascript-obfuscator": "^3.1.0"
+  },
+  "description": "- 自动领取奖励，并发送邮件提醒\r - 批量创建账户，目前没有什么用\r - 查看机器的workload\r - 机器掉线发送邮件提醒\r - 领取奖励账户余额低时发送邮件提醒\r - 全网数据统计\r - Cru18/Cru24解锁状态显示\r - Owner节点质押上限以及余额显示\r - Owner节点解锁数量列表倒计时数据显示(非准确数据)\r - 添加Owner账户时自动同步Member账户",
+  "main": "www.js",
+  "bin": {
+    "cru-tool": "bin/jscLoader.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jims123/cru-tools.git"
+  },
+  "keywords": [
+    "cru-tools",
+    "cru",
+    "miner",
+    "reward"
+  ],
+  "author": "jims",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jims123/cru-tools/issues"
+  },
+  "homepage": "https://github.com/jims123/cru-tools#readme"
+}

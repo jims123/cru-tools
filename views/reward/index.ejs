@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>账户管理</title>
+
+    <% include ../_header.ejs %>
+    <!-- Bootstrap -->
+    <style type="text/css">
+        .table td, .table th {
+            vertical-align: middle !important;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <%- include('../_nav.ejs',{actPage:'reward'}) %>
+    <ol class="breadcrumb">
+        <li><a href="/">首页</a></li>
+        <li><a href="/reward">奖励管理</a></li>
+    </ol>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <nav class="navbar navbar-default no-bottom">
+            <div class="container-fluid">
+                <form class="navbar-form navbar-left" action="/reward">
+                    <div class="form-group">
+                        <input type="text" name="addr" class="form-control" placeholder="用户地址" value="<%= addr %>">
+                    </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                </form>
+                <div class="nav navbar-nav navbar-right">
+                    <b class="navbar-brand">检索到<%= data.count %>行</b>
+                    <b class="navbar-brand">支付账户信息
+                        (<a class="copy-btn" href="#" data-toggle="tooltip" data-placement="auto" title="点击复制地址"
+                            data-clipboard-text="<%= CT.BC_ENV.REWARD_ACCOUNT_PAIR.address %>"><%= CT.BC_ENV.REWARD_ACCOUNT_PAIR.address.toAddr(5, 5) %></a>
+                        剩余:<%= balance.data.free.toHuman() %>|交易:<a target="_blank"
+                                                                    href="https://crust.subscan.io/account/<%= CT.BC_ENV.REWARD_ACCOUNT_PAIR.address %>?tab=extrinsic"><%= balance.nonce %></a>)</b>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th>时代</th>
+                    <th>预估费用</th>
+                    <th>获取奖励地址</th>
+                    <th>支付地址</th>
+                    <th>交易哈希</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+                <% if(data.count == 0){ %>
+                    <tr>
+                        <td colspan="7" style="text-align: center;">暂无记录</td>
+                    </tr>
+                <% } else { %>
+                    <% for(let i = 0; i < data.rows.length; i++){ %>
+                        <tr>
+                            <td><%= data.rows[i].eraIndex %></td>
+                            <td><%= data.rows[i].partialFee %></td>
+                            <td><a href="https://crust.subscan.io/account/<%= data.rows[i].ownerAddress %>"
+                                   target="_blank" title="查看详情"><%= data.rows[i].ownerAddress.toAddr(6, 6) %></a></td>
+                            <td><%= data.rows[i].callAddress.toAddr(6, 6) %></td>
+                            <td><a href="https://crust.subscan.io/extrinsic/<%= data.rows[i].txHash %>" target="_blank"
+                                   title="查看详情"><%= data.rows[i].txHash.toAddr(10, 10) %></a></td>
+                            <td><%= new Date(data.rows[i].createdAt * 1000).format('YYYY/MM/DD HH:mm:ss') %></td>
+                            <td>
+                                <input class="btn btn-sm" type="button" data-loading-text="正在删除..." data-id="<%= data.rows[i].id %>"
+                                       onclick="delLog(this)" value="删除">
+                                <input class="btn btn-sm" type="button" data-loading-text="在在发送..."
+                                       onclick="sendEmail(this)" data-era="<%= data.rows[i].eraIndex %>" value="发送邮件">
+                            </td>
+                        </tr>
+                    <% } %>
+                <% } %>
+            </table>
+            <% if(data.count > data.pageSize){ %>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <% if(page > 1){ %>
+                            <li>
+                                <a href="/reward/?page=<%= page - 1 %>&nk=<%= nk %>&addr=<%= addr %>"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                        <% for(let i = 0 ; i < Math.ceil(data.count / data.pageSize); i++){ %>
+                            <% if(i + 1 === data.page){ %>
+                            <li class="active">
+                                <% }else{ %>
+                            <li>
+                                <% } %>
+                                <a href="/reward/?page=<%= i + 1 %>&nk=<%= nk %>&addr=<%= addr %>"><%= i + 1 %></a>
+                            </li>
+                        <% } %>
+                        <% if(page < Math.ceil(data.count / data.pageSize)){ %>
+                            <li>
+                                <a href="/reward/?page=<%= page + 1 %>&nk=<%= nk %>&addr=<%= addr %>"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            <% } %>
+        </div>
+    </div>
+</div>
+<% include ../_footer.ejs %>
+<script>
+
+    function delLog(o) {
+        $(o).button('loading');
+        var id = $(o).data('id');
+        $.ajax({
+            type: 'DELETE',
+            url: '/reward',
+            data: {id: id},
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+
+    function sendEmail(o) {
+        var $btn = $(o).button('loading');
+        var era = $(o).data('era');
+        $.ajax({
+            type: 'POST',
+            url: '/reward/email',
+            data: {era: era},
+            success: function (ret) {
+                $btn.button('reset');
+                showMsg('发送邮件成功！',TipsType.Success);
+            },
+        });
+    }
+</script>
+</body>
+</html>

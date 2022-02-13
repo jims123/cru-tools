@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>机器管理</title>
+
+    <% include ../_header.ejs %>
+    <style type="text/css">
+        .table td, .table th {
+            vertical-align: middle !important;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <%- include('../_nav.ejs',{actPage:'owner'}) %>
+    <ol class="breadcrumb">
+        <li><a href="/">首页</a></li>
+        <li><a href="/owner">OWNER管理</a></li>
+    </ol>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <nav class="navbar navbar-default no-bottom">
+            <div class="container-fluid">
+                <form class="navbar-form navbar-left" action="/owner">
+                    <div class="form-group">
+                        <input type="text" name="addr" class="form-control" placeholder="用户地址" value="<%= addr %>">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="nk" class="form-control" placeholder="用户昵称" value="<%= nk %>">
+                    </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                    <button type="button" class="btn btn-default" data-toggle="modal"
+                            data-target="#addOwnerBox">
+                        添加拥有者
+                    </button>
+                </form>
+                <div class="nav navbar-nav navbar-right">
+                    <div class="navbar-header">
+                        <b class="navbar-brand">检索到<%= data.count %>行</b>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th>账户名</th>
+                    <th>地址</th>
+                    <th>控制账户地址</th>
+                    <th>自动领取奖励</th>
+                    <th>发送掉线提醒</th>
+                    <th>邮箱</th>
+                    <th>持有</th>
+                    <th>质押上限</th>
+                    <th>自己质押</th>
+                    <th>担保人费率</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+                <% if(data.count == 0){ %>
+                    <tr>
+                        <td colspan="10" style="text-align: center;">暂无记录</td>
+                    </tr>
+                <% } else { %>
+                    <% for(let i = 0; i < data.rows.length; i++){ %>
+                        <tr>
+                            <td><a href="https://crust.subscan.io/waiting/<%= data.rows[i].address %>" target="_blank" data-toggle="tooltip" data-placement="auto"
+                                   title="点击查看质押信息"><%= data.rows[i].name %></a></td>
+                            <td><a class="copy-btn" href="#" data-clipboard-text="<%= data.rows[i].address %>" data-toggle="tooltip" data-placement="auto"
+                                   title="单击复制"><%= data.rows[i].address.toAddr(6, 6) %></a></td>
+                            <td>
+                                <a class="copy-btn" href="#" data-toggle="tooltip" data-placement="auto"
+                                   data-clipboard-text="<%= data.rows[i].controllerAddress || '' %>"
+                                   title="单击复制"><%= data.rows[i].controllerAddress ? data.rows[i].controllerAddress.toAddr(6, 6) : '--' %></a>
+                            </td>
+                            <td><%= data.rows[i].needClaims == 1 ? '是' : '否' %></td>
+                            <td><%= data.rows[i].sendEmergency == 1 ? '是' : '否' %></td>
+                            <td><%= data.rows[i].email %></td>
+                            <td><%= data.rows[i].balance %></td>
+                            <td><%= data.rows[i].stakingLimit %></td>
+                            <td><%= data.rows[i].stakingAmount %></td>
+                            <td><%= data.rows[i].guaranteeFee %></td>
+                            <td><%= new Date(data.rows[i].createdAt * 1000).format('YYYY/MM/DD HH:mm:ss') %></td>
+                            <td>
+                                <input class="btn btn-sm" type="button" data-loading-text="编辑中..." data-id="<%= data.rows[i].id %>"
+                                       onclick="showEditOwnerBox(this)" value="编辑">
+                                <input class="btn btn-sm" type="button"
+                                       onclick="showUnlockListBox('<%= data.rows[i].id %>')" value="质押解锁状态">
+                                <input class="btn btn-sm" type="button" data-loading-text="正在删除..." data-address="<%= data.rows[i].address %>"
+                                       onclick="delOwner(this)" value="删除">
+                            </td>
+                        </tr>
+                    <% } %>
+                <% } %>
+            </table>
+            <% if(data.count > data.pageSize){ %>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <% if(page > 1){ %>
+                            <li>
+                                <a href="/owner/?page=<%= page - 1 %>&nk=<%= nk %>&addr=<%= addr %>"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                        <% for(let i = 0 ; i < Math.ceil(data.count / data.pageSize); i++){ %>
+                            <% if(i + 1 === data.page){ %>
+                            <li class="active">
+                                <% }else{ %>
+                            <li>
+                                <% } %>
+                                <a href="/owner/?page=<%= i + 1 %>&nk=<%= nk %>&addr=<%= addr %>"><%= i + 1 %></a>
+                            </li>
+                        <% } %>
+                        <% if(page < Math.ceil(data.count / data.pageSize)){ %>
+                            <li>
+                                <a href="/owner/?page=<%= page + 1 %>&nk=<%= nk %>&addr=<%= addr %>"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            <% } %>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addOwnerBox" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form id="addOwner">
+                    <div class="form-group">
+                        <label>账户昵称</label>
+                        <input type="text" class="form-control" name="name" placeholder="账户昵称">
+                    </div>
+                    <div class="form-group">
+                        <label>账户地址</label>
+                        <input type="text" class="form-control" name="address"
+                               placeholder="账户地址(例如:cTGLeYpUT3CMJVW8dH5jxMbWiP3BuxjdpAGqUJwcrRZQnwWhA)">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱地址</label>
+                        <input type="text" class="form-control" name="email" placeholder="发送各种事件提醒">
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="needclaim" value="1"> 是否自动领取奖励
+                        </label>
+                        <label>
+                            <input type="checkbox" name="sendEmergency" value="1"> 是否发送掉线提醒
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" data-loading-text="在在保存..." onclick="addOwner(this)">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editOwnerBox" tabindex="-1" role="dialog" data-backdrop="static" data-id="0">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form id="editOwner">
+                    <div class="form-group">
+                        <label>账户昵称</label>
+                        <input type="text" class="form-control" name="name" placeholder="账户昵称">
+                    </div>
+                    <div class="form-group">
+                        <label>账户地址</label>
+                        <input type="text" disabled="disabled" class="form-control" name="address"
+                               placeholder="账户地址(例如:cTGLeYpUT3CMJVW8dH5jxMbWiP3BuxjdpAGqUJwcrRZQnwWhA)">
+                    </div>
+                    <div class="form-group">
+                        <label>控制账户地址</label>
+                        <input type="text" disabled="disabled" class="form-control" name="controllerAddress"
+                               placeholder="控制账户地址(例如:cTGLeYpUT3CMJVW8dH5jxMbWiP3BuxjdpAGqUJwcrRZQnwWhA)">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱地址</label>
+                        <input type="text" class="form-control" name="email" placeholder="发送各种事件提醒">
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="needclaim" value="1"> 是否自动领取奖励
+                        </label>
+                        <label>
+                            <input type="checkbox" name="sendEmergency" value="1"> 是否发送掉线提醒
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" data-loading-text="在在保存..." onclick="editOwner(this)">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="unlockListBox" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">质押解锁列表</h4>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped" id="unlocking_list">
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<% include ../_footer.ejs %>
+<script>
+
+    function addOwner(o) {
+        var $btn = $(o).button('loading');
+        var data = $('#addOwner').serialize();
+        if (!$('#addOwner [name="name"]').val()) {
+            $btn.button('reset');
+            return alert('昵称不能为空！');
+        }
+        if (!$('#addOwner [name="address"]').val()) {
+            $btn.button('reset');
+            return alert('地址不能为空！');
+        }
+        if (!$('#addOwner [name="email"]').val()) {
+            $btn.button('reset');
+            return alert('邮箱不能为空！');
+        }
+        $.ajax({
+            type: 'POST',
+            url: '/owner',
+            data: data,
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+
+    function showUnlockListBox(id) {
+        $.ajax({
+            type: 'GET',
+            url: '/owner/' + id + '/unlock',
+            success: function (ret) {
+                var templ = [
+                    '<tr>',
+                    '<th>解锁数量</th>',
+                    '<th>剩余时间</th>',
+                    '</tr>'
+                ];
+                if (ret.data && ret.data.unlocking && ret.data.unlocking.length > 0) {
+                    for (var i = 0; i < ret.data.unlocking.length; i++) {
+                        var l = ret.data.unlocking[i];
+                        templ.push('<tr>', '<td>', l.value, '</td>', '<td>', l.era, '</td>', '</tr>')
+                    }
+                } else {
+                    templ.push('<tr><td colspan="2">暂无解锁信息</td></tr>')
+                }
+                $('#unlockListBox #unlocking_list').html(templ.join(''));
+                $('#unlockListBox').modal('show');
+            },
+        });
+    }
+
+    function showEditOwnerBox(o) {
+        var id = $(o).data('id');
+        $.ajax({
+            type: 'GET',
+            url: '/owner/' + id,
+            success: function (ret) {
+                $('#editOwner [name="name"]').val(ret.data.name);
+                $('#editOwner [name="address"]').val(ret.data.address);
+                if (ret.data.controllerAddress) {
+                    $('#editOwner [name="controllerAddress"]').val(ret.data.controllerAddress);
+                    $('#editOwner [name="controllerAddress"]').prop('disabled', true);
+                }
+                $('#editOwner [name="email"]').val(ret.data.email);
+                ret.data.needClaims == 1 ? $('#editOwner [name="needclaim"]').prop('checked', true) : $('#editOwner [name="needclaim"]').prop('checked', false);
+                ret.data.sendEmergency == 1 ? $('#editOwner [name="sendEmergency"]').prop('checked', true) : $('#editOwner [name="sendEmergency"]').prop('checked', false);
+            },
+        });
+        $('#editOwnerBox').data('id', id);
+        $('#editOwnerBox').modal('show');
+    }
+
+    function editOwner(o) {
+        var $btn = $(o).button('loading');
+        var id = $('#editOwnerBox').data('id');
+        var data = $('#editOwner').serialize();
+        if (!$('#editOwner [name="name"]').val()) {
+            $btn.button('reset');
+            return alert('昵称不能为空！');
+        }
+        if (!$('#editOwner [name="address"]').val()) {
+            $btn.button('reset');
+            return alert('地址不能为空！');
+        }
+        if (!$('#editOwner [name="email"]').val()) {
+            $btn.button('reset');
+            return alert('邮箱不能为空！');
+        }
+        $('#editOwnerBox #btn-genacc').prop('disabled', 'disabled');
+        $.ajax({
+            type: 'PUT',
+            url: '/owner/' + id,
+            data: data,
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+
+    function delOwner(o) {
+        var $btn = $(o).button('loading');
+        var addr = $(o).data('address');
+        $.ajax({
+            type: 'DELETE',
+            url: '/owner/',
+            data: {addr: addr},
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+</script>
+</body>
+</html>

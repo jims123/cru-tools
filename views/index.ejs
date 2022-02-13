@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>首页</title>
+    <% include ./_header.ejs %>
+    <style>
+        div {
+            line-height: 40px;
+        }
+
+        progress {
+            color: #6610f2;
+            background: #dddddd;
+            border-radius: 0.4rem;
+            width: 30%;
+            height: 30px;
+            vertical-align: middle;
+            margin-top: -2px;
+        }
+
+        /* 表示总长度背景色 */
+        progress::-webkit-progress-bar {
+            background-color: #dddddd;
+            border-radius: 0.4rem;
+        }
+
+        /* 表示已完成进度背景色 */
+        progress::-webkit-progress-value {
+            background: #6610f2;
+            border-radius: 0.4rem;
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
+        }
+
+        .chart, .lines {
+            position: relative;
+            display: inline-block;
+            padding: 0;
+            margin: 40px 0 0;
+            height: auto;
+            width: auto;
+            line-height: 0;
+            text-align: center;
+        }
+
+        .lines {
+            margin-top: 0;
+        }
+
+        .chart:before, .lines:before {
+            content: attr(data-title);
+            display: block;
+            font-size: 1rem;
+            margin: auto;
+            position: relative;
+            top: -2rem;
+        }
+
+        .chart:after, .lines:before {
+            content: attr(data-text);
+            display: block;
+            position: absolute;
+            top: 50%;
+            margin-top: -15px;
+            line-height: 30px;
+            font-size: 1rem;
+            left: 50%;
+            margin-left: -1.1rem;
+        }
+
+        table td {
+            width: 16.66% !important;
+        }
+
+        span.pie {
+            top: 5px;
+            left: 0.5rem;
+            position: relative;
+            display: inline-block;
+            line-height: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <%- include('./_nav.ejs',{actPage:''}) %>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="table-responsive">
+            <table class="table">
+                <tr>
+                    <td colspan="2">
+                        <span style="top:2px;" class="glyphicon glyphicon-play-circle"></span>
+                        <%= new Date(parseInt(data.progress.activeEraStart.toString())).format('HH:mm:ss') %>
+                    </td>
+                    <td colspan="2"><i style="top:2px;" data-toggle="tooltip" data-placement="auto" title="验证人"
+                                       class="glyphicon glyphicon-certificate"></i><%= data.overview.validators.length %>
+                        /<%= data.overview.validatorCount %>
+                        <i class="glyphicon glyphicon-adjust" data-toggle="tooltip" data-placement="auto" title="候选"
+                           style="top:2px;"></i><%= data.nojv %>
+                        <i class="glyphicon glyphicon-remove-circle" data-toggle="tooltip" data-placement="auto"
+                           title="僵尸节点"
+                           style="top:2px;"></i><%= data.waiting %>
+                    </td>
+                    <td colspan="2">最终高度:
+                        <b id="bestNumberFinalized"><%= data.bestNumberFinalized %></b></td>
+                </tr>
+            </table>
+            <table class="table">
+                <tr>
+                    <td colspan="2">
+                        <span id="ebtt" data-text="目标" data-title="<%= data.bestNumber %>"
+                              class="chart" data-toggle="tooltip" data-placement="auto"
+                              title="期望出块时间<%= data.expectedBlockTime %>ms">
+                            <i
+                                    data-peity='{ "fill": ["#6610f2", "#eeeeee"],"innerRadius": 20, "radius": 40 }'><%= data.expectedBlockTime / 100 %>/60</i></span>
+                    </td>
+                    <td colspan="2">
+                        <span id="epoch" class="chart" data-toggle="tooltip" data-placement="auto"
+                              data-title="<%= data.progress.sessionProgress %>" data-text="时期"
+                              title="剩余<%= ((data.progress.sessionLength - data.progress.sessionProgress) * data.expectedBlockTime / 1000).toTimeSpan() %>">
+                                <i
+                                        data-peity='{ "fill": ["#6610f2", "#eeeeee"],"innerRadius": 20, "radius": 40 }'><%= data.progress.sessionProgress %>/<%= data.progress.sessionLength %></i></span>
+                    </td>
+                    <td colspan="2">
+                        <span id="era" class="chart" data-toggle="tooltip" data-placement="auto"
+                              data-text="时代" data-title="<%= data.progress.activeEra %>"
+                              title="剩余<%= ((data.progress.eraLength - data.progress.eraProgress) * data.expectedBlockTime / 1000).toTimeSpan() %>">
+                                <i
+                                        data-peity='{ "fill": ["#6610f2", "#eeeeee"],"innerRadius": 20, "radius": 40 }'><%= data.progress.eraProgress %>/<%= data.progress.eraLength %></i></span>
+                    </td>
+                </tr>
+            </table>
+            <table class="table">
+                <!--                <b>sessionsPerEra:<%= data.progress.sessionsPerEra %></b>-->
+                <!--                <b>currentIndex:<%= data.progress.currentIndex %></b>-->
+                <tr style="padding-top: 2rem;">
+                    <td colspan="3">新增文件数量(每小时):</td>
+                    <td colspan="3">
+                        <span class="lines" data-text="<%= data.addedFilesCount %>"><i
+                                    class="dym-afc"><%= data.addedFilesCount %></i></span>
+                        <!--            <div>当前上报工作量所属槽:<%= data.currentReportSlot %></div>-->
+                        <!--            <div>历史记录槽深度:<%= data.historySlotDepth %></div>-->
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <div>可用存储:<b id="free"><%= CT.humanize.fileSize(data.free) %></b></div>
+                        <span class="lines-only" data-toggle="tooltip" data-placement="auto"
+                              title="24小时统计"><i><%= data.rrd.rrdFree.join(',') %></i></span>
+                    </td>
+                    <td colspan="3">
+                        <div>已用存储:<b id="reportedFilesSize"><%= CT.humanize.fileSize(data.reportedFilesSize) %></b>
+                        </div>
+                        <span class="lines-only" data-toggle="tooltip" data-placement="auto"
+                              title="24小时统计"><i><%= data.rrd.rrdReportedFilesSize.join(',') %></i></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <div>存储文件数量:<b id="fileKeysCount"><%= data.marketInfo.fileKeysCount.toNumber() %></b></div>
+                        <span class="lines-only" data-toggle="tooltip" data-placement="auto"
+                              title="24小时统计"><i><%= data.rrd.rrdFileKeysCount.join(',') %></i></span>
+                    </td>
+                    <td colspan="3">
+                        <div>
+                            有效质押:<%= data.erasTotalStakes.length > 0 ? data.erasTotalStakes[data.erasTotalStakes.length - 1].toHuman() : '--' %></div>
+                        <span class="lines-only" data-toggle="tooltip" data-placement="auto"
+                              title="最近10个时代"><i><%= data.erasTotalStakes.map(e => {
+                                    return e.toHuman().toString().replaceAll(/[a-z ]/ig, '');
+                                }).join(',') %></i></span></td>
+                </tr>
+                <tr>
+                    <td colspan="3">存储价格(MB):<%= data.marketInfo.fileByteFee.toHuman() %></td>
+                    <td colspan="3">订单数量(每小时):<%= data.marketInfo.ordersCount.toHuman() %></td>
+                </tr>
+            </table>
+            <table class="table">
+                <tr>
+                    <td style="text-align: center;" colspan="2">
+                        系统任务状态
+                    </td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;" colspan="2">任务当前时间:<b id="now">--</b><span class="pie"><i
+                                    id="task-pie">0,0</i></span></td>
+                </tr>
+                <tr>
+                    <td style="vertical-align: bottom;">当前执行计时(秒):<b id="currentTickTime">--</b></td>
+                    <td style="vertical-align: bottom;">下次轮转计时(秒):<b id="nextRoundStartTime">--</b></td>
+                </tr>
+            </table>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <tr>
+                    <td colspan="7">账户解锁信息</td>
+                </tr>
+                <tr>
+                    <th>名称</th>
+                    <th>地址</th>
+                    <th>总共锁定</th>
+                    <th>剩余锁定</th>
+                    <th>上次已解锁区块</th>
+                    <th>下次解锁预计时间</th>
+                    <th style="min-width: 10rem;">锁定时间(月)</th>
+                </tr>
+                <% data.ownerLocks.forEach(ol=>{ %>
+                    <% if (!ol.last_unlock_at) {
+                        return;
+                    } %>
+                    <tr>
+                        <td><%= ol.name %></td>
+                        <td><%= ol.address.toAddr(6, 6) %></td>
+                        <td><%= CT.BC_ENV.API.createType('Balance', ol.total).toHuman() %></td>
+                        <td><%= ol.lockInfo ? CT.BC_ENV.API.createType('Balance', ol.lockInfo.amount).toHuman() : '--' %></td>
+                        <td><%= ol.last_unlock_at %></td>
+                        <td><%= ((ol.last_unlock_at + (data.progress.eraLength * 30 * 4) - data.bestNumberFinalized) * (data.expectedBlockTime / 1000)).toTimeSpan() %></td>
+                        <td><%= ol.lock_type.lock_period %></td>
+                    </tr>
+                <% }) %>
+            </table>
+        </div>
+    </div>
+</div>
+<% include ./_footer.ejs %>
+<script src="/js/jquery.peity.min.js"></script>
+<script>
+    $(function () {
+        $("#task-pie").peity("pie", {width: 20, height: 20});
+        $(".chart i").peity("donut");
+        let uAFC = $(".lines i.dym-afc").peity("line", {width: 150, height: 24});
+        $(".lines-only i").peity("line", {width: 150, height: 24});
+        let count = 0;
+        setInterval(function () {
+            count++;
+            $('#ebtt').attr('data-text', (count / 10).toFixed(1) + 'S');
+            $('#ebtt i').text(count + '/60').change();
+        }, 100);
+
+        let HandlePoll = {
+            addedFilesCount: function (data) {
+                var queue = uAFC.text().split(",");
+                var c = parseInt(data, 16);
+                queue.length > 20 && queue.shift();
+                queue.push(c), uAFC.text(queue.join(',')).change();
+                uAFC.closest('span').attr('data-text', c);
+            },
+            now: function (data) {
+                $('#now').text(data.now.toDate('YYYY/MM/DD HH:mm:ss'));
+                $('#currentTickTime').text(data.currentTickTime / 1000);
+                $('#nextRoundStartTime').text(data.nextRoundStartTime / 1000);
+                $('#task-pie').text([data.currentTickTime / 1000, data.nextRoundStartTime / 1000].join(',')).change();
+            },
+            free: function (data) {
+                $('#free').text(data);
+            },
+            reportedFilesSize: function (data) {
+                $('#reportedFilesSize').text(data);
+            },
+            fileKeysCount: function (data) {
+                $('#fileKeysCount').text(parseInt(data, 16));
+            },
+            bestNumberFinalized: function (data) {
+                $('#bestNumberFinalized').text(parseInt(data, 16));
+            },
+            bestNumber: function (data) {
+                count = 0;
+                $('#ebtt').attr('data-title', parseInt(data, 16));
+                let fs = $('#epoch i').text().split('/');
+                let ep = (fs.shift() * 1 + 1) % 600;
+                $('#epoch').attr('data-title', ep);
+                fs.unshift(ep), $('#epoch i').text(fs.join('/')).change();
+                fs = $('#era i').text().split('/');
+                let e = fs.shift() * 1 + 1;
+                fs.unshift(e % 3600), $('#era i').text(fs.join('/')).change();
+                if (e > 3600) {
+                    $('#era').attr('data-title', $('#era').attr('data-title') * 1 + 1);
+                }
+            },
+        };
+        let es = new EventSource('/sse/home');
+        es.onmessage = function (e) {
+            let jd = JSON.parse(e.data);
+            for (let k in jd) {
+                if (k == 'now') {
+                    HandlePoll[k] && HandlePoll[k](jd);
+                    continue;
+                }
+                HandlePoll[k] && HandlePoll[k](jd[k]);
+            }
+
+        };
+        es.onerror = function (err) {
+            console.error(err);
+        };
+    });
+
+</script>
+</body>
+</html>

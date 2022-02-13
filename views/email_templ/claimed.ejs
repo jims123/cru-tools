@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>奖励领取通知</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        @media screen and (max-width: 500px) {
+            html, body {
+                font-size: 14px;
+            }
+
+            * {
+                font-size: 1.2rem;
+            }
+
+            table td {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body style="padding: 20px; font-size: 16px;">
+<table style="border-collapse: collapse">
+    <td colspan="4"><p><a href="https://crust.subscan.io/account/<%= owner.address %>"><%= owner.name %>奖励信息</a></p>
+    </td>
+    <tr>
+        <th style="border: 1px solid #000;">时代</th>
+        <th style="border: 1px solid #000;">预估费用</th>
+        <th style="border: 1px solid #000;">支付地址</th>
+        <th style="border: 1px solid #000;">交易哈希</th>
+        <th style="border: 1px solid #000;">创建时间</th>
+    </tr>
+    <% for(let i = 0; i < data.length; i++){ %>
+        <tr>
+            <td style="border: 1px solid #000;"><%= data[i].eraIndex %></td>
+            <td style="border: 1px solid #000;"><%= CT.BC_ENV.API.createType('Balance', data[i].partialFee).toHuman() %></td>
+            <td style="border: 1px solid #000;"><%= data[i].callAddress.toAddr(6, 6) %></td>
+            <td style="border: 1px solid #000;"><a href="https://crust.subscan.io/extrinsic/<%= data[i].txHash %>"
+                                                   target="_blank"
+                                                   title="查看详情"><%= data[i].txHash.toAddr(10, 10) %></a></td>
+            <td style="border: 1px solid #000;"><%= new Date(data[i].createdAt * 1000).format('YYYY/MM/DD HH:mm:ss') %></td>
+        </tr>
+    <% } %>
+</table>
+</body>
+</html>

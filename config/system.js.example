@@ -1,0 +1,37 @@
+module.exports = {
+    CookieSecret:'secret',      //最好去百度使用密码生成器生成一个随机字符串
+    SessionName:'user',         //最好去百度使用密码生成器生成一个随机字符串
+    PORT: 9000,                 //默认访问端口
+    crustApi: 'wss://rpc.crust.network/',   //连接CRU主网地址，如果发现网页访问变慢，可以改成其他地址
+    subscanApi: 'https://crust.api.subscan.io',
+    secret: 'test',                         //最好去百度使用密码生成器生成一个随机字符串
+    rewardAccountMnemonic: "",              //领取奖励时支付gas费账户的助剂词（CRU主网账户）
+    rewardAccountBalanceWarning: 0.05,      //支付gas费账户余额低于0.05个CRU时发送邮件提醒，可适当修改
+    claimPerEra: 4,                         //每4个era领取一次奖励，可以自行修改，一般4个era相当于24个小时
+    claimPerEraOffset: 1,                   //用于修正领取奖励的时间，只能是1，2，3，4
+    memberOfflineMaxTime: 1,                //机器掉线超过{memberOfflineMaxTime}+1小时发送邮件提醒
+    memberOfflineHDDCapSpan: 8 * 1024 * 1024 * 1024 * 1024, // 该参数的单位是字节，当前值是8TB,机器两次上报的算力相差{memberOfflineHDDCapSpan}时发送邮件提醒
+    needSendEmail: true,                                  // 是否发送邮件提醒，如果不发送下面的stmp配置可以忽略，否则必须配置正确的stmp服务器信息
+    stmp: {
+        sender: '"XXX_Robot" <xxxxxxx@sample.com>',   //邮件发送的昵称,部分stmp服务器可能不支持自定义昵称
+        host: 'smtp.sample.com',                          //邮件服务器的地址
+        port: '465',                                      //邮件服务器的端口
+        secure: true,                                     //是否为SSL加密端口
+        auth: {
+            user: 'xxxxxxxxx@sample.com',                 //邮件服务器的账户
+            pass: 'test'                                  //邮件服务器的密码
+        }
+    },
+    dbcfg: {
+            host: 'localhost',
+            user: 'root',
+            password: '1q!2w@',
+            db: 'test_cru_db',
+            port: 3306,
+            pool: {
+                min: 0,
+                max: 600,
+                idle: 1000 * 10
+            }
+        },
+};

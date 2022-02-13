@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= member.name %>机器管理</title>
+    <% include ../_header.ejs %>
+    <style type="text/css">
+        .table td, .table th {
+            vertical-align: middle !important;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <%- include('../_nav.ejs',{actPage:'member'}) %>
+    <ol class="breadcrumb">
+        <li><a href="/">首页</a></li>
+        <li><a href="/member">机器管理</a></li>
+        <li>机器工作量上报</li>
+    </ol>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <nav class="navbar navbar-default no-bottom">
+            <div class="container-fluid">
+                <form class="navbar-form navbar-left">
+                    <input type="hidden" name="pageSize" value="<%= pageSize %>">
+                    <button type="button" class="btn btn-default" onclick="resetReport()">
+                        重新填充最近<%= CT.constant.FILL_WORKREPORT_LIMIT %>个上报记录
+                    </button>
+                </form>
+                <div class="nav navbar-nav navbar-right">
+                    <div class="navbar-header">
+                        <b class="navbar-brand">检索到<%= data.count %>行</b>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th>地址</th>
+                    <th>报告区块</th>
+                    <th>上报容量</th>
+                    <th>已使用容量</th>
+<!--                    <th>额外增加容量</th>-->
+                    <th>上报时间</th>
+                    <th>创建时间</th>
+                </tr>
+                <% if(data.count == 0){ %>
+                    <tr>
+                        <td colspan="6" style="text-align: center;">暂无记录</td>
+                    </tr>
+                <% } else { %>
+                    <% for(let i = 0; i < data.rows.length; i++){ %>
+                        <tr>
+                            <td class="acc-addr"
+                                data-address="<%= data.rows[i].address %>"><%= data.rows[i].address.toAddr(6,6) %></td>
+                            <td><%= data.rows[i].reportSlot || '' %></td>
+                            <td><%= data.rows[i].freeH || '--' %></td>
+                            <td><%= data.rows[i].reportedFilesSizeH %></td>
+<!--                            <td><%= data.rows[i].spowerH %></td>-->
+                            <td><%= data.rows[i].reportTime ? data.rows[i].reportTime.toDate('YYYY/MM/DD HH:mm:ss') : '--' %></td>
+                            <td><%= data.rows[i].createdAt.toDate('YYYY/MM/DD HH:mm:ss') %></td>
+                        </tr>
+                    <% } %>
+                <% } %>
+            </table>
+            <% if(data.count > data.pageSize){ %>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <% if(page > 1){ %>
+                            <li>
+                                <a href="/member/<%= member.id %>/reports?page=<%= page - 1 %>&pageSize=<%= pageSize %>"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                        <% for(let i = 0 ; i < Math.ceil(data.count / data.pageSize); i++){ %>
+                            <% if(i + 1 === data.page){ %>
+                            <li class="active">
+                                <% }else{ %>
+                            <li>
+                                <% } %>
+                                <a href="/member/<%= member.id %>/reports?page=<%= i + 1 %>&pageSize=<%= pageSize %>"><%= i + 1 %></a>
+                            </li>
+                        <% } %>
+                        <% if(page < Math.ceil(data.count / data.pageSize)){ %>
+                            <li>
+                                <a href="/member/<%= member.id %>/reports?page=<%= page + 1 %>&pageSize=<%= pageSize %>"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            <% } %>
+        </div>
+    </div>
+</div>
+<% include ../_footer.ejs %>
+<script>
+
+    function resetReport() {
+        if(confirm('重新填充上报日志会删除之前所有的存储的上报数据')) {
+            $.ajax({
+                type: 'put',
+                url: location.href,
+                data: {},
+                success: function (ret) {
+                    location.reload();
+                },
+            });
+        }
+    }
+</script>
+</body>
+</html>

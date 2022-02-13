@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>机器管理</title>
+    <% include ../_header.ejs %>
+    <style type="text/css">
+        .table td, .table th {
+            vertical-align: middle !important;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <%- include('../_nav.ejs',{actPage:'syscfg'}) %>
+    <ol class="breadcrumb">
+        <li><a href="/">首页</a></li>
+        <li><a href="/member" class="active">机器管理</a></li>
+    </ol>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <nav class="navbar navbar-default no-bottom">
+            <div class="container-fluid">
+                <form class="navbar-form navbar-left" action="/syscfg" method="get">
+                    <div class="form-group">
+                        <input type="text" name="name" class="form-control" placeholder="配置名" value="<%= name %>">
+                    </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#addCfgBox">
+                        添加配置项
+                    </button>
+                </form>
+                <div class="nav navbar-nav navbar-right">
+                    <div class="navbar-header">
+                        <b class="navbar-brand">检索到<%= data.length %>个配置项</b>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th>配置名</th>
+                    <th>类型</th>
+                    <th>配置值</th>
+                    <th>当前值</th>
+                    <th>描述</th>
+                    <th>修改时间</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+                <% if(data.length == 0){ %>
+                    <tr>
+                        <td colspan="6" style="text-align: center;">暂无配置项</td>
+                    </tr>
+                <% } else { %>
+                    <% for(let i = 0; i < data.length; i++){ %>
+                        <tr>
+                            <td><%= data[i].keyName %></td>
+                            <td><%= data[i].keyType %></td>
+                            <td><%= data[i].keyValue %></td>
+                            <td><%= CT.config[data[i].keyName] %></td>
+                            <td><%= data[i].keyDesc %></td>
+                            <td><%= new Date(data[i].updatedAt * 1000).format('YYYY/MM/DD HH:mm:ss') %></td>
+                            <td><%= new Date(data[i].createdAt * 1000).format('YYYY/MM/DD HH:mm:ss') %></td>
+                            <td>
+                                <input class="btn btn-sm" type="button"
+                                       data-id="<%= data[i].id %>"
+                                       onclick="showEditCfgBox(<%= data[i].id %>)"
+                                       value="编辑">
+                                <input class="btn btn-sm" type="button"
+                                       onclick="delCfg('<%= data[i].id %>')" value="删除">
+                            </td>
+                        </tr>
+                    <% } %>
+                <% } %>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addCfgBox" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form id="addCfg">
+                    <div class="form-group">
+                        <label>配置项名</label>
+                        <select name="name" class="form-control">
+                            <option value="">----选择配置项----</option>
+                            <% for(let k in CT.constant.SYSTEM_CONFIG_KEY_NAME){ %>
+                                <option value="<%= CT.constant.SYSTEM_CONFIG_KEY_NAME[k] %>"><%= k %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>配置项值</label>
+                        <input type="text" class="form-control" name="value"
+                               placeholder="配置值">
+                    </div>
+                    <div class="form-group">
+                        <label>配置项值类型</label>
+                        <select name="type" class="form-control">
+                            <option value="">----选择配置项值类型----</option>
+                            <% for(let k in CT.constant.SYSTEM_CONFIG_KEY_TYPE){ %>
+                                <option value="<%= CT.constant.SYSTEM_CONFIG_KEY_TYPE[k] %>"><%= k %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>配置项描述</label>
+                        <input type="text" class="form-control" name="desc"
+                               placeholder="配置项描述">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" id="btn-genacc" class="btn btn-primary" onclick="addCfg()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editCfgBox" tabindex="-1" role="dialog" data-backdrop="static" data-id="0">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form id="editCfg">
+                    <div class="form-group">
+                        <label>配置项名</label>
+                        <select name="name" class="form-control" disabled="disabled">
+                            <option value="">----选择配置项----</option>
+                            <% for(let k in CT.constant.SYSTEM_CONFIG_KEY_NAME){ %>
+                                <option value="<%= CT.constant.SYSTEM_CONFIG_KEY_NAME[k] %>"><%= k %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>配置项值</label>
+                        <input type="text" class="form-control" name="value"
+                               placeholder="配置值">
+                    </div>
+                    <div class="form-group">
+                        <label>配置项值类型</label>
+                        <select name="type" class="form-control">
+                            <option value="">----选择配置项值类型----</option>
+                            <% for(let k in CT.constant.SYSTEM_CONFIG_KEY_TYPE){ %>
+                                <option value="<%= CT.constant.SYSTEM_CONFIG_KEY_TYPE[k] %>"><%= k %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>配置项描述</label>
+                        <input type="text" class="form-control" name="desc"
+                               placeholder="配置项描述">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" id="btn-genacc" class="btn btn-primary" onclick="editCfg()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+<% include ../_footer.ejs %>
+<script>
+
+    function showEditCfgBox(id) {
+        $.ajax({
+            type: 'GET',
+            url: '/syscfg/' + id,
+            success: function (ret) {
+                $('#editCfg [name="name"]').val(ret.data.keyName);
+                $('#editCfg [name="value"]').val(ret.data.keyValue);
+                $('#editCfg [name="type"]').val(ret.data.keyType);
+                $('#editCfg [name="desc"]').val(ret.data.keyDesc);
+            },
+        });
+        $('#editCfgBox').data('id', id);
+        $('#editCfgBox').modal('show');
+    }
+
+    function addCfg() {
+        var data = $('#addCfg').serialize();
+        if (!$('#addCfg [name="name"]').val()) {
+            return alert('配置项名不能为空！');
+        }
+        if (!$('#addCfg [name="value"]').val()) {
+            return alert('配置项值不能为空！');
+        }
+        if (!$('#addCfg [name="type"]').val()) {
+            return alert('配置项值类型不能为空！');
+        }
+        if (!$('#addCfg [name="desc"]').val()) {
+            return alert('配置项描述不能为空！');
+        }
+        $('#addCfg #btn-genacc').prop('disabled', 'disabled');
+        $.ajax({
+            type: 'POST',
+            url: '/syscfg/',
+            data: data,
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+
+    function editCfg() {
+        var id = $('#editCfgBox').data('id');
+        var data = $('#editCfg').serialize();
+        if (!$('#editCfg [name="name"]').val()) {
+            return alert('配置项名不能为空！');
+        }
+        if (!$('#editCfg [name="value"]').val()) {
+            return alert('配置项值不能为空！');
+        }
+        if (!$('#editCfg [name="type"]').val()) {
+            return alert('配置项值类型不能为空！');
+        }
+        if (!$('#editCfg [name="desc"]').val()) {
+            return alert('配置项描述不能为空！');
+        }
+        $('#editCfgBox #btn-genacc').prop('disabled', 'disabled');
+        $.ajax({
+            type: 'PUT',
+            url: '/syscfg/' + id,
+            data: data,
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+
+    function delCfg(id) {
+        $.ajax({
+            type: 'DELETE',
+            url: '/syscfg/' + id,
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+</script>
+</body>
+</html>

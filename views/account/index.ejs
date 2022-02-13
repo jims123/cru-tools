@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>账户管理</title>
+    <% include ../_header.ejs %>
+    <style type="text/css">
+        .table td, .table th {
+            vertical-align: middle !important;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <%- include('../_nav.ejs',{actPage:'account'}) %>
+    <ol class="breadcrumb">
+        <li><a href="/">首页</a></li>
+        <li><a href="/account" class="active">账户管理</a></li>
+    </ol>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <nav class="navbar navbar-default no-bottom">
+            <div class="container-fluid">
+                <form class="navbar-form navbar-left" action="/account">
+                    <div class="form-group">
+                        <input type="text" name="addr" class="form-control" placeholder="用户地址" value="<%= addr %>">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="nk" class="form-control" placeholder="用户昵称" value="<%= nk %>">
+                    </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#addAccountBox">
+                        创建账户
+                    </button>
+                    <button type="button" class="btn btn-default" data-toggle="modal"
+                            data-target="#batchTransferAccountBox">
+                        批量转账
+                    </button>
+                </form>
+                <div class="nav navbar-nav navbar-right">
+                    <b class="navbar-brand">检索到<%= data.count %>行</b>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th>账户名</th>
+                    <th>地址</th>
+                    <th>账户类型</th>
+                    <th>账户来源</th>
+                    <th>持有</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+                <% if(data.count == 0){ %>
+                    <tr>
+                        <td colspan="7" style="text-align: center;">暂无记录</td>
+                    </tr>
+                <% } else { %>
+                    <% for(let i = 0; i < data.rows.length; i++){ %>
+                        <tr>
+                            <td><%= data.rows[i].name %></td>
+                            <td class="acc-addr"
+                                data-address="<%= data.rows[i].address %>"><%= data.rows[i].address.toAddr(6, 6) %></td>
+                            <td><%= data.rows[i].type.toAccountType() %></td>
+                            <td><%= data.rows[i].source.toAccountSource() %></td>
+                            <td><%= data.rows[i].balance %></td>
+                            <td><%= new Date(data.rows[i].createdAt * 1000).format('YYYY/MM/DD HH:mm:ss') %></td>
+                            <td>
+                                <input class="btn btn-sm" type="button" data-address="<%= data.rows[i].address %>"  data-loading-text="正在导出..."
+                                       onclick="getBackupJson(this)" value="导出JSON">
+                                <input class="btn btn-sm" type="button" data-loading-text="正在删除..."
+                                       data-address="<%= data.rows[i].address %>"
+                                       onclick="delAccount(this)" value="删除">
+                            </td>
+                        </tr>
+                    <% } %>
+                <% } %>
+            </table>
+            <% if(data.count > data.pageSize){ %>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <% if(page > 1){ %>
+                            <li>
+                                <a href="/account/?page=<%= page - 1 %>&nk=<%= nk %>&addr=<%= addr %>"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                        <% for(let i = 0 ; i < Math.ceil(data.count / data.pageSize); i++){ %>
+                            <% if(i + 1 === data.page){ %>
+                            <li class="active">
+                                <% }else{ %>
+                            <li>
+                                <% } %>
+                                <a href="/account/?page=<%= i + 1 %>&nk=<%= nk %>&addr=<%= addr %>"><%= i + 1 %></a>
+                            </li>
+                        <% } %>
+                        <% if(page < Math.ceil(data.count / data.pageSize)){ %>
+                            <li>
+                                <a href="/account/?page=<%= page + 1 %>&nk=<%= nk %>&addr=<%= addr %>"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            <% } %>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addAccountBox" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog" aria-labelledby="addAccountBox" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form id="addAccount">
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">账户昵称前缀</label>
+                        <input type="text" class="form-control" name="namePrefix" placeholder="账户昵称前缀(系统会自动添加下划线)">
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">创建数量</label>
+                        <input type="number" value="1" max="500" class="form-control" name="count" placeholder="创建账户数量">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" id="btn-genacc" class="btn btn-primary" onclick="addAccount()">生成</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="batchTransferAccountBox" tabindex="-1" role="dialog"
+     aria-labelledby="batchTransferAccountBox" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form id="batchTransferAccount">
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">转账账户地址:</label>
+                        <select class="form-control" name="taddress">
+                            <% for(let i = 0; i < transferAccounts.length; i++){ %>
+                                <option value="<%= transferAccounts[i].address %>"><%= transferAccounts[i].name %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">接受账户地址列表:</label>
+                        <div class="address-box"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">每个用户金额:</label>
+                        <input type="number" value="0.5" max="10" step="0.01" class="form-control" name="balance"
+                               onkeyup="batchTransferAccountFee()"
+                               placeholder="每个用户金额">
+                    </div>
+                    <input type="hidden" name="type" value="batch"/>
+                    <input type="hidden" name="addresses"/>
+                    <span id="helpBlock" class="help-block">本次转账需要花费手续费: <b id="fee">0</b> </span>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" id="btn-batchtransferacc" class="btn btn-primary"
+                        onclick="batchTransferAccount()">转账
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<% include ../_footer.ejs %>
+<script>
+
+    function reSetAddr() {
+        var addres = $('#batchTransferAccount span.data-addr').map((a, b) => {
+            return $(b).data('address')
+        }).toArray();
+        $('[name="addresses"]').val(addres.join(','));
+    }
+
+    function getBackupJson(o) {
+        var $btn = $(o).button('loading');
+        var address = $(o).data('address');
+        if (!address) {
+            $btn.button('reset');
+            return;
+        }
+        var pwd = prompt('请为您的json文件创建密码:', '12345678');
+        if(!pwd){
+            $btn.button('reset');
+            return;
+        }
+        var opener = window.open('/account/download?address=' + address + '&pwd=' + pwd, '_newtab');
+        var timer = setInterval(function (){
+            if(opener.closed){
+                $btn.button('reset');
+                opener = timer = undefined;
+                clearInterval(timer);
+            }
+        },1000);
+    }
+
+    $(function () {
+        $('#batchTransferAccountBox').on('show.bs.modal', function (e) {
+            $('#fee').text(0);
+            var htmlStr = [];
+            $('td.acc-addr').map((a, b) => {
+                var r = {name: $(b).closest('td').prev('td').text(), address: $(b).data('address')};
+                var templ = `<span class="label label-primary data-addr" title="${r.address}"
+                      data-address="${r.address}"
+                      onclick="$(this).remove(),batchTransferAccountFee()">${r.name}</span>`;
+                htmlStr.push(templ);
+            });
+            $('.address-box').html(htmlStr.join(' '));
+            batchTransferAccountFee();
+        });
+    });
+
+    function addAccount() {
+        var data = $('#addAccount').serialize();
+        if (!$('[name="namePrefix"]').val()) {
+            return alert('昵称前缀不能为空！');
+        }
+        $('#btn-genacc').prop('disabled', 'disabled');
+        $.ajax({
+            type: 'POST',
+            url: '/account/',
+            data: data,
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+
+    function batchTransferAccount() {
+        var data = $('#batchTransferAccount').serialize();
+        if (!$('[name="taddress"]').val()) {
+            return alert('转账地址不能为空！');
+        }
+        if (!$('[name="addresses"]').val()) {
+            return alert('接受地址不能为空！');
+        }
+        $('#btn-batchtransferacc').prop('disabled', 'disabled');
+        $.ajax({
+            type: 'put',
+            url: '/account/transfer',
+            data: data,
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+
+    function batchTransferAccountFee() {
+        reSetAddr();
+        $('#btn-batchtransferacc').prop('disabled', 'disabled');
+        var data = $('#batchTransferAccount').serialize();
+        if (!$('[name="taddress"]').val()) {
+            return;
+        }
+        if (!$('[name="addresses"]').val()) {
+            return;
+        }
+        $('#fee').html('<font style="color:green">正在计算费用...</font>');
+        $.ajax({
+            type: 'get',
+            url: '/account/transferfee',
+            data: data,
+            success: function (ret) {
+                if (ret.errCode == 0) {
+                    $('#fee').html(ret.data);
+                    $('#btn-batchtransferacc').removeProp('disabled');
+                } else {
+                    $('#fee').html('<font style="color:red">' + ret.errMsg + '</font>');
+                }
+            },
+        });
+    }
+
+    function delAccount(o) {
+        var $btn = $(o).button('loading');
+        var addr = $(o).data('address');
+        // $btn.button('reset');
+        $.ajax({
+            type: 'DELETE',
+            url: '/account/',
+            data: {addr: addr},
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>机器管理</title>
+    <% include ../_header.ejs %>
+    <style type="text/css">
+        .table td, .table th {
+            vertical-align: middle !important;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <%- include('../_nav.ejs',{actPage:'member'}) %>
+    <ol class="breadcrumb">
+        <li><a href="/">首页</a></li>
+        <li><a href="/member" class="active">机器管理</a></li>
+    </ol>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <nav class="navbar navbar-default no-bottom">
+            <div class="container-fluid">
+                <form class="navbar-form navbar-left" action="/member" method="get">
+                    <input type="hidden" name="pageSize" value="<%= pageSize %>">
+                    <div class="form-group">
+                        <input type="text" name="addr" class="form-control" placeholder="用户地址" value="<%= addr %>">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" name="nk" class="form-control" placeholder="用户昵称" value="<%= nk %>">
+                    </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#addMemberBox">
+                        添加机器
+                    </button>
+                </form>
+                <div class="nav navbar-nav navbar-right">
+                    <div class="navbar-header">
+                        <b class="navbar-brand">检索到<%= data.count %>行</b>
+                    </div>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <tr>
+                    <th>账户名</th>
+                    <th>上次上报时间</th>
+                    <th>上次上报容量</th>
+                    <th>地址</th>
+                    <th>所属</th>
+                    <th>持有</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+                <% if(data.count == 0){ %>
+                    <tr>
+                        <td colspan="8" style="text-align: center;">暂无记录</td>
+                    </tr>
+                <% } else { %>
+                    <% for(let i = 0; i < data.rows.length; i++){ %>
+                        <tr>
+                            <td><a href="https://crust.subscan.io/account/<%= data.rows[i].address %>" target="_blank"
+                                   title="查看详情"><%= data.rows[i].name %></a></td>
+                            <td><%= (data.rows[i].reportInfo && data.rows[i].reportInfo.reportTime || 0).toDate('YYYY/MM/DD HH:mm:ss') || '--' %></td>
+                            <td><%= data.rows[i].reportInfo ? CT.humanize.fileSize(data.rows[i].reportInfo.free) : '--' %></td>
+                            <td class="acc-addr">
+                                <a href="#" class="copy-btn" data-toggle="tooltip" data-placement="auto"
+                                   data-clipboard-text="<%= data.rows[i].address %>"
+                                   title="单击复制"><%= data.rows[i].address.toAddr(6,6) %></a></td>
+                            <td><a target="_blank"
+                                   href="https://crust.subscan.io/member?address=<%= data.rows[i].source %>"><%= ownerMap[data.rows[i].source] || '----' %></a>
+                            </td>
+                            <td><%= data.rows[i].balance %></td>
+                            <td><%= new Date(data.rows[i].createdAt * 1000).format('YYYY/MM/DD HH:mm:ss') %></td>
+                            <td>
+                                <a class="btn btn-sm" type="button"
+                                   href="/member/<%= data.rows[i].id %>/reports" value="">查看上报记录</a>
+                                <input class="btn btn-sm" type="button" data-loading-text="编辑中..."
+                                       data-id="<%= data.rows[i].id %>"
+                                       onclick="showEditMemberBox(this)"
+                                       value="编辑">
+                                <input class="btn btn-sm" type="button" data-loading-text="正在删除..." data-address="<%= data.rows[i].address %>"
+                                       onclick="delMember(this)" value="删除">
+                            </td>
+                        </tr>
+                    <% } %>
+                <% } %>
+            </table>
+            <% if(data.count > data.pageSize){ %>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <% if(page > 1){ %>
+                            <li>
+                                <a href="/member/?page=<%= page - 1 %>&pageSize=<%= pageSize %>&nk=<%= nk %>&addr=<%= addr %>"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Previous">
+                                    <span aria-hidden="true">上一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                        <% for(let i = 0 ; i < Math.ceil(data.count / data.pageSize); i++){ %>
+                            <% if(i + 1 === data.page){ %>
+                            <li class="active">
+                                <% }else{ %>
+                            <li>
+                                <% } %>
+                                <a href="/member/?page=<%= i + 1 %>&pageSize=<%= pageSize %>&nk=<%= nk %>&addr=<%= addr %>"><%= i + 1 %></a>
+                            </li>
+                        <% } %>
+                        <% if(page < Math.ceil(data.count / data.pageSize)){ %>
+                            <li>
+                                <a href="/member/?page=<%= page + 1 %>&pageSize=<%= pageSize %>&nk=<%= nk %>&addr=<%= addr %>"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <li class="disabled">
+                                <a
+                                        aria-label="Next">
+                                    <span aria-hidden="true">下一页</span>
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </nav>
+            <% } %>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="addMemberBox" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form id="addMember">
+                    <div class="form-group">
+                        <label>账户昵称</label>
+                        <input type="text" class="form-control" name="name" placeholder="账户昵称">
+                    </div>
+                    <div class="form-group">
+                        <label>账户地址</label>
+                        <input type="text" class="form-control" name="address"
+                               placeholder="账户地址(例如:cTGLeYpUT3CMJVW8dH5jxMbWiP3BuxjdpAGqUJwcrRZQnwWhA)">
+                    </div>
+                    <div class="form-group">
+                        <label>账户所属</label>
+                        <select name="source" class="form-control">
+                            <option value="">----选择账户所属----</option>
+                            <% for(let i = 0; i < owners.length; i++){ %>
+                                <option value="<%= owners[i].address %>"><%= owners[i].name %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" id="btn-genacc" class="btn btn-primary" data-loading-text="正在保存..." onclick="addMember(this)">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editMemberBox" tabindex="-1" role="dialog" data-backdrop="static" data-id="0">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form id="editMember">
+                    <div class="form-group">
+                        <label>账户昵称</label>
+                        <input type="text" class="form-control" name="name" placeholder="账户昵称">
+                    </div>
+                    <div class="form-group">
+                        <label>账户地址</label>
+                        <input type="text" class="form-control" name="address"
+                               placeholder="账户地址(例如:cTGLeYpUT3CMJVW8dH5jxMbWiP3BuxjdpAGqUJwcrRZQnwWhA)">
+                    </div>
+                    <div class="form-group">
+                        <label>账户所属</label>
+                        <select name="source" class="form-control">
+                            <option value="">----选择账户所属----</option>
+                            <% for(let i = 0; i < owners.length; i++){ %>
+                                <option value="<%= owners[i].address %>"><%= owners[i].name %></option>
+                            <% } %>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" id="btn-genacc" class="btn btn-primary" onclick="editMember(this)" data-loading-text="正在保存...">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+<% include ../_footer.ejs %>
+<script>
+
+    function showEditMemberBox(o) {
+        var id = $(o).data('id');
+        $.ajax({
+            type: 'GET',
+            url: '/member/' + id,
+            success: function (ret) {
+                $('#editMember [name="name"]').val(ret.data.name);
+                $('#editMember [name="address"]').val(ret.data.address);
+                $('#editMember [name="source"]').val(ret.data.source);
+            },
+        });
+        $('#editMemberBox').data('id', id);
+        $('#editMemberBox').modal('show');
+    }
+
+    function addMember(o) {
+        var $btn = $(o).button('loading');
+        var data = $('#addMember').serialize();
+        if (!$('#addMember [name="name"]').val()) {
+            $btn.button('reset');
+            return alert('昵称不能为空！');
+        }
+        if (!$('#addMember [name="address"]').val()) {
+            $btn.button('reset');
+            return alert('地址不能为空！');
+        }
+        if (!$('#addMember [name="source"]').val()) {
+            $btn.button('reset');
+            return alert('机器所属不能为空！');
+        }
+        $('#addMember #btn-genacc').prop('disabled', 'disabled');
+        $.ajax({
+            type: 'POST',
+            url: '/member/',
+            data: data,
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+
+    function editMember(o) {
+        var $btn = $(o).button('loading');
+        var id = $('#editMemberBox').data('id');
+        var data = $('#editMember').serialize();
+        if (!$('#editMember [name="name"]').val()) {
+            $btn.button('reset');
+            return alert('昵称不能为空！');
+        }
+        if (!$('#editMember [name="address"]').val()) {
+            $btn.button('reset');
+            return alert('地址不能为空！');
+        }
+        if (!$('#editMember [name="source"]').val()) {
+            $btn.button('reset');
+            return alert('机器所属不能为空！');
+        }
+        $.ajax({
+            type: 'PUT',
+            url: '/member/' + id,
+            data: data,
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+
+    function delMember(o) {
+        var $btn = $(o).button('loading');
+        var addr = $(o).data('address');
+        // $btn.button('reset');
+        $.ajax({
+            type: 'DELETE',
+            url: '/member/',
+            data: {addr: addr},
+            success: function (ret) {
+                location.reload();
+            },
+        });
+    }
+</script>
+</body>
+</html>

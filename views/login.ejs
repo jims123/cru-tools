@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>登录</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <style>
+        body{
+            background-color: #3c3c3c;
+        }
+        #login-form {
+            padding: 25px;
+            text-align: center;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
+        #login-msg {
+            color: #f00;
+        }
+        .logo{
+            font-size:3cm;
+            font-weight: bolder;
+            color:#8a6d3b;
+        }
+        label{
+            color:#eee;
+        }
+    </style>
+</head>
+<body>
+<form id="login-form" method="post" onclick="return false;">
+    <div class="logo center-block">C</div>
+    <div class="form-group">
+        <label for="username">账户名</label>
+        <input type="text" name="username" class="form-control" id="username" placeholder="账户名">
+    </div>
+    <div class="form-group">
+        <label for="password">登陆密码</label>
+        <input type="password" class="form-control" id="password" data-key="<%- aesKey %>" placeholder="登陆密码">
+        <input type="hidden" name="password">
+        <p class="help-block" id="login-msg"></p>
+    </div>
+    <button type="submit" class="btn btn-default" onclick="loginForm()" type="button">登 录</button>
+</form>
+<script src="/js/jquery.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/crypto-js.js"></script>
+<script>
+
+    function loginForm() {
+        var inputPwd = $('#password');
+        if ($('[name=username]').val().length <= 0) {
+            return $('#login-msg').html('登录名不能为空');
+        }
+        if (inputPwd.val().length <= 0) {
+            return $('#login-msg').html('登录密码不能为空');
+        }
+        var ciphertext = CryptoJS.MD5(inputPwd.val());
+        $('[name=password]').val(ciphertext.toString());
+        var data = $('#login-form').serialize();
+        $.ajax({
+            url: location.pathname,
+            timeout: 30 * 1000,
+            data: data,
+            type: 'POST',
+            success: function (ret, status, xhr, $form) {
+                if (ret.errCode === 0) {
+                    location.replace('/');
+                } else {
+                    $('#login-msg').html(ret.errMsg);
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

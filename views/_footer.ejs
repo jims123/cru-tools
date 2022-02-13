@@ -1,0 +1,52 @@
+
+<script src="/js/jquery.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/clipboard.min.js"></script>
+<script src="/js/hullabaloo.min.js"></script>
+<script>
+    $.hulla = new hullabaloo();
+    var TipsType = {
+        Success: 'success', Info: 'info', Warning: 'warning', Danger: 'danger'
+    };
+
+    function showAbout() {
+        $('#about-box').modal('show');
+    }
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-loading-text]').tooltip();
+        var clipboard = new ClipboardJS('.copy-btn');
+        clipboard.on('success', function (e) {
+            e.clearSelection();
+            showMsg('复制成功',TipsType.Success);
+        });
+        clipboard.on('error', function (e) {
+            showMsg('您的手机暂不支持，请长按进行复制', TipsType.Danger);
+        });
+    })
+
+    function showMsg(data, type) {
+        $.hulla.send(data, type)
+    }
+
+    Date.prototype.format = function (fmt) { //author: meizz
+        var o = {
+            "M+": this.getMonth() + 1, //月份
+            "D+": this.getDate(), //日
+            "H+": this.getHours(), //小时
+            "m+": this.getMinutes(), //分
+            "s+": this.getSeconds(), //秒
+            "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+            "S": this.getMilliseconds() //毫秒
+        };
+        if (/(Y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+        for (var k in o)
+            if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+        return fmt;
+    };
+
+    Number.prototype.toDate = function (fmt){
+        return new Date(this).format(fmt);
+    }
+
+</script>

@@ -1,0 +1,8 @@
+.idea
+config/system.js
+checksums.json
+package-lock.json
+cru.db
+sessions.db
+user.lic
+node_modules

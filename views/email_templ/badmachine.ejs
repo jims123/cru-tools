@@ -1,0 +1,44 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>故障机器提醒</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        @media screen and (max-width: 500px) {
+            html, body {
+                font-size: 14px;
+            }
+
+            * {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body style="padding: 20px; font-size: 16px;">
+<table style="border-collapse: collapse">
+    <tr>
+        <th style="border: 1px solid #000;">机器名</th>
+        <th style="border: 1px solid #000;">群组名</th>
+        <th style="border: 1px solid #000;">最后上报槽</th>
+        <th style="border: 1px solid #000;">最后上报时间</th>
+        <th style="border: 1px solid #000;">两次容量差</th>
+    </tr>
+    <% for(let i = 0; i < data.length; i++){ %>
+        <tr>
+            <td style="border: 1px solid #000;"><a href="https://crust.subscan.io/account/<%= data[i].address %>"
+                                                   target="_blank"
+                                                   title="查看详情"><%= data[i].memberName %></a></td>
+            <td style="border: 1px solid #000;"><a href="https://crust.subscan.io/account/<%= data[i].ownerAddress %>"
+                                                   target="_blank"
+                                                   title="查看详情"><%= data[i].ownerName %></a></td>
+            <td style="border: 1px solid #000;"><%= data[i].reportSlot %></td>
+            <td style="border: 1px solid #000;<%- data[i].reportWarn ? 'background:red;' : '' %>"><%= data[i].reportWarn ? '异常:' + data[i].reportTime.toDate('YYYY/MM/DD HH:mm:ss') : '无异常' %></td>
+            <td style="border: 1px solid #000;<%- data[i].capWarn ? 'background:red;' : '' %>"><%= data[i].capWarn ? '异常:' + CT.humanize.fileSize(data[i].capDiff) : '无异常' %></td>
+        </tr>
+    <% } %>
+</table>
+</body>
+</html>

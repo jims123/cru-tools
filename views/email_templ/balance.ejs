@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>余额低提醒</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        @media screen and (max-width: 500px) {
+            html, body {
+                font-size: 14px;
+            }
+
+            * {
+                font-size: 1.2rem;
+            }
+
+            table td {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body style="padding: 20px; font-size: 16px;">
+<table style="border-collapse: collapse">
+    <tr>
+        <th style="border: 1px solid #000;">支付地址</th>
+        <th style="border: 1px solid #000;">剩余</th>
+        <th style="border: 1px solid #000;">nonce</th>
+    </tr>
+        <tr>
+            <td style="border: 1px solid #000;"><%= data.address %></td>
+            <td style="border: 1px solid #000;"><%= CT.BC_ENV.API.createType('Balance', data.balance).toHuman() %></td>
+            <td style="border: 1px solid #000;"><%= data.nonce %></td>
+        </tr>
+</table>
+</body>
+</html>

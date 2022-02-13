@@ -1,0 +1,46 @@
+<nav class="navbar navbar-default no-bottom">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-page-nav"
+                    aria-expanded="false">
+                <span class="sr-only">显示导航</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <b class="navbar-brand" onclick="showAbout('CRU')">&nbsp;&nbsp;<%= user.username.toAddr(5, 5) %></b>
+        </div>
+
+        <div class="collapse navbar-collapse" id="bs-page-nav">
+            <ul class="nav navbar-nav">
+                <li class="<%= actPage == '' ? 'active' : '' %>"><a href="/">首页</a></li>
+                <li class="<%= actPage == 'member' ? 'active' : '' %>"><a href="/member">机器管理</a></li>
+                <li class="<%= actPage == 'account' ? 'active' : '' %>"><a href="/account">账户管理</a></li>
+                <li class="<%= actPage == 'owner' ? 'active' : '' %>"><a href="/owner">OWNER管理</a></li>
+                <li class="<%= actPage == 'reward' ? 'active' : '' %>"><a href="/reward">奖励领取记录</a></li>
+                <li class="<%= actPage == 'user' ? 'active' : '' %>"><a href="/user">用户管理</a></li>
+                <li class="<%= actPage == 'syscfg' ? 'active' : '' %>"><a href="/syscfg">系统配置管理</a></li>
+                <li><a href="/logout" type="post">退出</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="modal fade" role="dialog" id="about-box">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">温馨提醒</h4>
+            </div>
+            <div class="modal-body">
+                工具的功能在不断完善中，捐赠地址: <a class="copy-btn" href="#" data-toggle="tooltip" data-placement="auto"
+                                     data-clipboard-text="cTKurCWYeQk96rTapB1kVyGuVfPSAAGHVWEFGQEmQpmKTb9iN" data-clipboard-action="copy"
+                                     title="单击复制">cTKurCWYeQk96rTapB1kVyGuVfPSAAGHVWEFGQEmQpmKTb9iN</a>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
